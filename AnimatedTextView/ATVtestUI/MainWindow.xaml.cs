@@ -1,3 +1,4 @@
+using AnimatedTextView;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -30,7 +31,13 @@ namespace ATVtestUI
 
         private void myButton_Click(object sender, RoutedEventArgs e)
         {
-            TextView.Text = TextBox.Text;
+            TextView1.Text = TextBox.Text;
+            TextView2.Text = TextBox.Text;
+            TextView3.Text = TextBox.Text;
+            TextView4.Text = TextBox.Text;
+            TextView5.Text = TextBox.Text;
+            TextView6.Text = TextBox.Text;
+            TextView7.Text = TextBox.Text;
         }
     }
 }

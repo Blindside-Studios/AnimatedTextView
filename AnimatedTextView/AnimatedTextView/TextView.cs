@@ -58,6 +58,21 @@ namespace AnimatedTextView
             }
         }
 
+        public static readonly DependencyProperty TextBlockStyleProperty = 
+            DependencyProperty.Register(nameof(Style), typeof(Style), typeof(TextView),
+            new PropertyMetadata(null, OnTextBlockStyleChanged));
+
+        private static void OnTextBlockStyleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            // there's nothing here
+        }
+
+        public new Style Style
+        {
+            get => (Style)GetValue(TextBlockStyleProperty);
+            set => SetValue(TextBlockStyleProperty, value);
+        }
+
         protected override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
@@ -149,16 +164,14 @@ namespace AnimatedTextView
                 }
             }
             _lastText = newText;
-            startAnimation();
+            if (_textContainer != null) startAnimation();
         }
 
 
         private async void startAnimation()
         {
-            Debug.WriteLine("The following actions will be performed:");
             foreach(var item in _actionsQueue)
             {
-                Debug.WriteLine(item.ToString());
             }
             while (_actionsQueue.Count > 0)
             {
@@ -175,12 +188,10 @@ namespace AnimatedTextView
         {
             if (index < 0 || index > _calculatedText.Length)
             {
-                Debug.WriteLine($"Scheduled: InsertAt: Index {index} is out of bounds for string '{_calculatedText}'");
                 return;
             }
 
             _calculatedText = _calculatedText.Insert(index, letter.ToString());
-            Debug.WriteLine($"Scheduled: Inserted char '{letter}' at position {index}, full string is now: {_calculatedText}");
 
             _actionsQueue.Add(new ModifyAction()
             {
@@ -194,13 +205,11 @@ namespace AnimatedTextView
         {
             if (index < 0 || index >= _calculatedText.Length)
             {
-                Debug.WriteLine($"Scheduled: RemoveAt: Index {index} is out of bounds for string '{_calculatedText}'");
                 return;
             }
 
             char removedChar = _calculatedText[index];
             _calculatedText = _calculatedText.Remove(index, 1);
-            Debug.WriteLine($"Scheduled: Removed char '{removedChar}' at position {index}, full string is now: {_calculatedText}");
 
             _actionsQueue.Add(new ModifyAction()
             {
@@ -212,19 +221,17 @@ namespace AnimatedTextView
 
         private void InsertAt(char letter, int index)
         {
-            Debug.WriteLine($"Inserted char '{letter}' at position {index}");
-
             var insertIndex = InsertColumnAt(index);
 
             var charBlock = new TextBlock
             {
-                Text = letter.ToString(),
-                FontSize = 30,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                Text = letter.ToString()
             };
 
-            if (letter == ' ') charBlock.MinWidth = _textContainer.ActualHeight / 4;
+            if (Style != null) charBlock.Style = Style;
+            else charBlock.FontSize = 12;
+
+            if (letter == ' ') charBlock.MinWidth = _textContainer.ActualHeight / 5;
 
             Grid.SetColumn(charBlock, insertIndex);
             _textBlocks.Insert(index, charBlock);
@@ -341,7 +348,7 @@ namespace AnimatedTextView
         public bool IsAdding { get; set; }
         public char Char { get; set; }
         public int Index { get; set; }
-        public string ToString()
+        public new string ToString()
         {
             return $"IsAdding: {IsAdding} the character {Char} at {Index}";
         }
