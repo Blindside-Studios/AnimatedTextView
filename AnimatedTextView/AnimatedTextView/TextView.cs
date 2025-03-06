@@ -224,6 +224,8 @@ namespace AnimatedTextView
                 VerticalAlignment = VerticalAlignment.Center
             };
 
+            if (letter == ' ') charBlock.MinWidth = _textContainer.ActualHeight / 4;
+
             Grid.SetColumn(charBlock, insertIndex);
             _textBlocks.Insert(index, charBlock);
             _textContainer.Children.Add(charBlock);
