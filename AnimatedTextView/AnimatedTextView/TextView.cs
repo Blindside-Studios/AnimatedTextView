@@ -19,6 +19,7 @@ using System.Diagnostics;
 using Windows.Security.Cryptography.Core;
 using Microsoft.UI.Xaml.Media.Animation;
 using Windows.UI.ViewManagement;
+using Windows.UI.Composition;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -262,34 +263,44 @@ namespace AnimatedTextView
 
         private void AnimateIn(TextBlock text)
         {
-            var visual = ElementCompositionPreview.GetElementVisual(text);
-            var compositor = visual.Compositor;
-            var milliseconds = 500;
+            UISettings settings = new UISettings();
+            if (settings.AnimationsEnabled)
+            {
+                var visual = ElementCompositionPreview.GetElementVisual(text);
+                var compositor = visual.Compositor;
+                var milliseconds = 500;
 
-            // Set Transform Center to Middle
-            visual.CenterPoint = new System.Numerics.Vector3(
-                (float)text.ActualWidth / 2,
-                (float)text.ActualHeight,
-                0
-            );
+                // Set Transform Center to Middle
+                visual.CenterPoint = new System.Numerics.Vector3(
+                    (float)text.ActualWidth / 2,
+                    (float)text.ActualHeight,
+                    0
+                );
 
-            // Start values: Fully shrunk & transparent
-            visual.Opacity = 0f;
-            visual.Scale = new System.Numerics.Vector3(0, 0, 1);
+                // Start values: Fully shrunk & transparent
+                visual.Opacity = 0f;
+                visual.Scale = new System.Numerics.Vector3(0, 0, 1);
 
-            // Opacity Animation
-            var fadeIn = compositor.CreateScalarKeyFrameAnimation();
-            fadeIn.InsertKeyFrame(1f, 1f);
-            fadeIn.Duration = TimeSpan.FromMilliseconds(milliseconds);
+                // Opacity Animation
+                var fadeIn = compositor.CreateScalarKeyFrameAnimation();
+                fadeIn.InsertKeyFrame(1f, 1f);
+                fadeIn.Duration = TimeSpan.FromMilliseconds(milliseconds);
 
-            // Scale Animation (expands to full size)
-            var scaleUp = compositor.CreateVector3KeyFrameAnimation();
-            scaleUp.InsertKeyFrame(1f, new System.Numerics.Vector3(1f, 1f, 1f));
-            scaleUp.Duration = TimeSpan.FromMilliseconds(milliseconds);
+                // Scale Animation (expands to full size)
+                var scaleUp = compositor.CreateVector3KeyFrameAnimation();
+                scaleUp.InsertKeyFrame(1f, new System.Numerics.Vector3(1f, 1f, 1f));
+                scaleUp.Duration = TimeSpan.FromMilliseconds(milliseconds);
 
-            // Start the animations
-            visual.StartAnimation("Opacity", fadeIn);
-            visual.StartAnimation("Scale", scaleUp);
+                // Start the animations
+                visual.StartAnimation("Opacity", fadeIn);
+                visual.StartAnimation("Scale", scaleUp);
+            }
+            else
+            {
+                var visual = ElementCompositionPreview.GetElementVisual(text);
+                visual.Opacity = 1f;
+                visual.Scale = new System.Numerics.Vector3(1, 1, 1);
+            }
         }
 
 
@@ -299,30 +310,39 @@ namespace AnimatedTextView
             var compositor = visual.Compositor;
             var milliseconds = 300;
 
-            // start values
-            visual.Opacity = 1f;
-            visual.Scale = new System.Numerics.Vector3(1f, 1f, 1f);
+            UISettings settings = new UISettings();
+            if (settings.AnimationsEnabled)
+            {
+                // start values
+                visual.Opacity = 1f;
+                visual.Scale = new System.Numerics.Vector3(1f, 1f, 1f);
 
-            visual.CenterPoint = new System.Numerics.Vector3(
-                (float)text.ActualWidth / 2,
-                (float)(text.ActualHeight * 0.75),
-                0
-            );
+                visual.CenterPoint = new System.Numerics.Vector3(
+                    (float)text.ActualWidth / 2,
+                    (float)(text.ActualHeight * 0.75),
+                    0
+                );
 
-            // opacity animation
-            var fadeIn = compositor.CreateScalarKeyFrameAnimation();
-            fadeIn.InsertKeyFrame(1f, 0f);
-            fadeIn.Duration = TimeSpan.FromMilliseconds(milliseconds);
+                // opacity animation
+                var fadeIn = compositor.CreateScalarKeyFrameAnimation();
+                fadeIn.InsertKeyFrame(1f, 0f);
+                fadeIn.Duration = TimeSpan.FromMilliseconds(milliseconds);
 
-            // scale animation
-            var scaleUp = compositor.CreateVector3KeyFrameAnimation();
-            scaleUp.InsertKeyFrame(1f, new System.Numerics.Vector3(0f, 0f, 1f)); // Normal size
-            scaleUp.Duration = TimeSpan.FromMilliseconds(milliseconds);
+                // scale animation
+                var scaleUp = compositor.CreateVector3KeyFrameAnimation();
+                scaleUp.InsertKeyFrame(1f, new System.Numerics.Vector3(0f, 0f, 1f)); // Normal size
+                scaleUp.Duration = TimeSpan.FromMilliseconds(milliseconds);
 
-            visual.StartAnimation("Opacity", fadeIn);
-            visual.StartAnimation("Scale", scaleUp);
+                visual.StartAnimation("Opacity", fadeIn);
+                visual.StartAnimation("Scale", scaleUp);
 
-            await Task.Delay(milliseconds);
+                await Task.Delay(milliseconds);
+            }
+            else
+            {
+                visual.Opacity = 0f;
+                visual.Scale = new System.Numerics.Vector3(0f, 0f, 1f);
+            }
             return;
         }
 
