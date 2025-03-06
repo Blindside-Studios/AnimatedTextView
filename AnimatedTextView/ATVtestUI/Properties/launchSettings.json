@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ATVtestUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "ATVtestUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
