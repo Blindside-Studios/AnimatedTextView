@@ -17,6 +17,8 @@ using System.Reflection;
 using Windows.ApplicationModel.VoiceCommands;
 using System.Diagnostics;
 using Windows.Security.Cryptography.Core;
+using Microsoft.UI.Xaml.Media.Animation;
+using Windows.UI.ViewManagement;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -123,6 +125,11 @@ namespace AnimatedTextView
 
             // Reverse the list to get left-to-right order.
             actions.Reverse();
+            // Sort to get a left-to-right animation
+            actions = actions
+                .OrderBy(a => a.Index)
+                .ThenBy(a => a.IsAdding ? 1 : 0) // deletions (false) come before additions (true)
+                .ToList();
 
             // Process the actions with an offset to adjust indices.
             int offset = 0;
@@ -160,7 +167,7 @@ namespace AnimatedTextView
                 else RemoveAt(action.Index);
 
                 _actionsQueue.RemoveAt(0);
-                await Task.Delay(3);
+                await Task.Delay(5);
             }
         }
 
@@ -240,40 +247,42 @@ namespace AnimatedTextView
 
             await AnimateOut(textBlock);
 
-            _textContainer.Children.Remove(textBlock);
             _textContainer.ColumnDefinitions.Remove(column);
+            _textContainer.Children.Remove(textBlock);
         }
 
         private void AnimateIn(TextBlock text)
         {
             var visual = ElementCompositionPreview.GetElementVisual(text);
             var compositor = visual.Compositor;
-            var milliseconds = 300;
+            var milliseconds = 500;
 
-            // start values
+            // Set Transform Center to Middle
+            visual.CenterPoint = new System.Numerics.Vector3(
+                (float)text.ActualWidth / 2,
+                (float)text.ActualHeight,
+                0
+            );
+
+            // Start values: Fully shrunk & transparent
             visual.Opacity = 0f;
-            visual.Scale = new System.Numerics.Vector3(0.5f, 0.5f, 1f);
-            visual.Offset = new System.Numerics.Vector3(0, -5, 0);
+            visual.Scale = new System.Numerics.Vector3(0, 0, 1);
 
-            // opacity animation
+            // Opacity Animation
             var fadeIn = compositor.CreateScalarKeyFrameAnimation();
             fadeIn.InsertKeyFrame(1f, 1f);
             fadeIn.Duration = TimeSpan.FromMilliseconds(milliseconds);
 
-            // scale animation
+            // Scale Animation (expands to full size)
             var scaleUp = compositor.CreateVector3KeyFrameAnimation();
-            scaleUp.InsertKeyFrame(1f, new System.Numerics.Vector3(1f, 1f, 1f)); // Normal size
+            scaleUp.InsertKeyFrame(1f, new System.Numerics.Vector3(1f, 1f, 1f));
             scaleUp.Duration = TimeSpan.FromMilliseconds(milliseconds);
 
-            // translation animation
-            var moveDown = compositor.CreateVector3KeyFrameAnimation();
-            moveDown.InsertKeyFrame(1f, new System.Numerics.Vector3(0, 0, 0)); // Move to final position
-            moveDown.Duration = TimeSpan.FromMilliseconds(milliseconds);
-
+            // Start the animations
             visual.StartAnimation("Opacity", fadeIn);
             visual.StartAnimation("Scale", scaleUp);
-            visual.StartAnimation("Offset", moveDown);
         }
+
 
         private async Task AnimateOut(TextBlock text)
         {
@@ -284,11 +293,16 @@ namespace AnimatedTextView
             // start values
             visual.Opacity = 1f;
             visual.Scale = new System.Numerics.Vector3(1f, 1f, 1f);
-            visual.Offset = new System.Numerics.Vector3(0, 0, 0);
+
+            visual.CenterPoint = new System.Numerics.Vector3(
+                (float)text.ActualWidth / 2,
+                (float)(text.ActualHeight * 0.75),
+                0
+            );
 
             // opacity animation
             var fadeIn = compositor.CreateScalarKeyFrameAnimation();
-            fadeIn.InsertKeyFrame(0f, 0f);
+            fadeIn.InsertKeyFrame(1f, 0f);
             fadeIn.Duration = TimeSpan.FromMilliseconds(milliseconds);
 
             // scale animation
@@ -296,14 +310,8 @@ namespace AnimatedTextView
             scaleUp.InsertKeyFrame(1f, new System.Numerics.Vector3(0f, 0f, 1f)); // Normal size
             scaleUp.Duration = TimeSpan.FromMilliseconds(milliseconds);
 
-            // translation animation
-            var moveDown = compositor.CreateVector3KeyFrameAnimation();
-            moveDown.InsertKeyFrame(1f, new System.Numerics.Vector3(0, 0, 0)); // Move to final position
-            moveDown.Duration = TimeSpan.FromMilliseconds(milliseconds);
-
             visual.StartAnimation("Opacity", fadeIn);
             visual.StartAnimation("Scale", scaleUp);
-            visual.StartAnimation("Offset", moveDown);
 
             await Task.Delay(milliseconds);
             return;
@@ -323,32 +331,6 @@ namespace AnimatedTextView
             }
 
             return index;
-
-
-            /*var insertIndex = index;
-            var column = new ColumnDefinition { Width = GridLength.Auto };
-
-            if (index >= _columns.Count)
-            {
-                _textContainer.ColumnDefinitions.Add(column);
-                _columns.Add(column);
-            }
-            else
-            {*/
-            /*insertIndex = 0;
-            if (index > 0)
-            {
-                insertIndex = _textContainer.ColumnDefinitions.IndexOf(_columns[index - 1]) + 1;
-            }*/
-            /*_columns.Insert(insertIndex, column);
-            _textContainer.ColumnDefinitions.Insert(insertIndex, column);
-            foreach (var textBlock in _textBlocks)
-            {
-                var currentIndex = Grid.GetColumn(textBlock);
-                Grid.SetColumn(textBlock, currentIndex + 1);
-            }
-        }
-        return insertIndex;*/
         }
     }
 
