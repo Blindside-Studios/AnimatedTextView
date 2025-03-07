@@ -7,8 +7,10 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:TextView">
-                    <Grid x:Name="RootGrid">
-                        <Grid x:Name="TextContainer" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Grid x:Name="RootGrid" HorizontalAlignment="Stretch">
+                        <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" IsHorizontalRailEnabled="True">
+                            <Grid x:Name="TextContainer" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                        </ScrollViewer>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

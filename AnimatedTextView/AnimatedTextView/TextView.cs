@@ -20,6 +20,7 @@ using Windows.Security.Cryptography.Core;
 using Microsoft.UI.Xaml.Media.Animation;
 using Windows.UI.ViewManagement;
 using Windows.UI.Composition;
+using System.Text;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -29,6 +30,7 @@ namespace AnimatedTextView
     public sealed class TextView : Control
     {
         private Grid _textContainer;
+        private Grid _rootGrid;
         private string _lastText = string.Empty;
         private string _calculatedText = string.Empty;
 
@@ -78,6 +80,7 @@ namespace AnimatedTextView
         {
             base.OnApplyTemplate();
             _textContainer = GetTemplateChild("TextContainer") as Grid;
+            _rootGrid = GetTemplateChild("RootGrid") as Grid;
             UpdateText(Text);
         }
 
@@ -165,15 +168,15 @@ namespace AnimatedTextView
                 }
             }
             _lastText = newText;
-            if (_textContainer != null) startAnimation();
+            if (_textContainer != null)
+            {
+                startAnimation();
+            }
         }
 
 
         private async void startAnimation()
         {
-            foreach(var item in _actionsQueue)
-            {
-            }
             while (_actionsQueue.Count > 0)
             {
                 var action = _actionsQueue[0];
@@ -182,6 +185,41 @@ namespace AnimatedTextView
 
                 _actionsQueue.RemoveAt(0);
                 await Task.Delay(5);
+            }
+            trimText();
+        }
+
+        private void trimText()
+        {
+            if (_textContainer.ActualWidth > _rootGrid.ActualWidth)
+            {
+                double totalColumnsWidth = 0;
+                int firstOverlappingColumn = -1;
+                for (int i = 0; i < _columns.Count; i++)
+                {
+                    totalColumnsWidth += _columns[i].ActualWidth;
+                    if (totalColumnsWidth > _rootGrid.ActualWidth)
+                    {
+                        firstOverlappingColumn = i;
+                        break;
+                    }
+                }
+                if (firstOverlappingColumn > 2)
+                {
+                    Debug.WriteLine($"Found overlap at position {firstOverlappingColumn}");
+                    RemoveAt(firstOverlappingColumn - 3);
+                    InsertAt('\u2026', firstOverlappingColumn - 3); // insert the ellipsis character ("…")
+                    while (_columns.Count > firstOverlappingColumn - 2)
+                    {
+                        RemoveAt(firstOverlappingColumn - 2);
+                    }
+
+                    StringBuilder sb = new StringBuilder(_calculatedText);
+                    sb[firstOverlappingColumn - 1] = '\u2026';
+                    _calculatedText = sb.ToString().Substring(0, _columns.Count);
+                    _lastText = _calculatedText;
+                    Debug.WriteLine($"Displayed string is now {_calculatedText}");
+                }
             }
         }
 
@@ -232,7 +270,7 @@ namespace AnimatedTextView
             if (Style != null) charBlock.Style = Style;
             else charBlock.FontSize = 12;
 
-            if (letter == ' ') charBlock.MinWidth = _textContainer.ActualHeight / 5;
+            if (letter == ' ') charBlock.MinWidth = _textContainer.ActualHeight / 6;
 
             Grid.SetColumn(charBlock, insertIndex);
             _textBlocks.Insert(index, charBlock);
@@ -242,8 +280,6 @@ namespace AnimatedTextView
 
         private async void RemoveAt(int index)
         {
-            Debug.WriteLine($"Removed char at position {index}");
-
             var textBlock = _textBlocks[index];
             var column = _columns[index];
 

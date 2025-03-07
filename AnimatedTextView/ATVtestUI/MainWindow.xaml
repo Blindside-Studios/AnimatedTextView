@@ -10,7 +10,7 @@
     mc:Ignorable="d"
     Title="ATVtestUI">
 
-    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" Margin="100" VerticalAlignment="Top">
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" Background="Gray" Margin="100" Width="600"  VerticalAlignment="Top">
         <atv:TextView x:Name="TextView1" HorizontalAlignment="Left" Text="Caption" Style="{StaticResource CaptionTextBlockStyle}"/>
         <atv:TextView x:Name="TextView2" HorizontalAlignment="Left" Text="Body" Style="{StaticResource BodyTextBlockStyle}"/>               
         <atv:TextView x:Name="TextView3" HorizontalAlignment="Left" Text="Body Strong" Style="{StaticResource BodyStrongTextBlockStyle}"/>  
